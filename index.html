@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a2e1a">
+<title>The Midfield Blueprint</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --pitch: #1a2e1a; --accent: #c8f542; --accent-dim: rgba(200,245,66,0.15);
+    --accent-glow: rgba(200,245,66,0.35); --white: #f0f4e8;
+    --muted: rgba(240,244,232,0.45); --muted2: rgba(240,244,232,0.12);
+    --card: rgba(255,255,255,0.04); --card-hover: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08); --rodri: #4fc3f7; --rice: #81c784;
+    --tchou: #ffb74d; --danger: #ef5350; --custom: #ce93d8;
+    --radius: 12px; --radius-sm: 8px;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--pitch); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 15px; line-height: 1.6; min-height: 100vh; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.015) 60px, rgba(255,255,255,0.015) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,0.015) 60px, rgba(255,255,255,0.015) 61px); pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 500px; height: 500px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.025); pointer-events: none; z-index: 0; }
+  .app { position: relative; z-index: 1; max-width: 920px; margin: 0 auto; padding: 0 20px 80px; }
+  header { padding: 36px 0 20px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; border-bottom: 1px solid var(--border); margin-bottom: 28px; }
+  .logo-area h1 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px, 6vw, 58px); letter-spacing: 2px; color: var(--accent); line-height: 1; text-shadow: 0 0 40px var(--accent-glow); }
+  .logo-area p { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .date-display { text-align: right; }
+  .date-display .date-big { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--accent); letter-spacing: 1px; }
+  .date-display .date-small { font-size: 11px; color: var(--muted); }
+  .week-reset-note { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .sync-indicator { font-size: 10px; margin-top: 3px; }
+  .sync-indicator.syncing { color: var(--tchou); }
+  .sync-indicator.synced { color: var(--rice); }
+  .sync-indicator.error { color: var(--danger); }
+  .level-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--accent-dim); border: 1px solid var(--accent-glow); border-radius: 30px; padding: 5px 14px; font-size: 13px; font-weight: 500; color: var(--accent); margin-bottom: 16px; }
+  .xp-section { margin-bottom: 28px; }
+  .xp-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 7px; }
+  .xp-track { height: 7px; background: var(--muted2); border-radius: 10px; position: relative; }
+  .xp-fill { height: 100%; background: linear-gradient(90deg, #8bc34a, var(--accent)); border-radius: 10px; transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative; }
+  .xp-fill::after { content: ''; position: absolute; right: -4px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+  .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 28px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; position: relative; overflow: hidden; transition: border-color 0.2s; }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent); opacity: 0; transition: opacity 0.3s; }
+  .stat-card.lit::before { opacity: 1; }
+  .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 3px; }
+  .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--accent); line-height: 1; text-shadow: 0 0 20px var(--accent-glow); transition: transform 0.15s; }
+  .stat-value.bump { transform: scale(1.15); }
+  .stat-sub { font-size: 10px; color: var(--muted); margin-top: 1px; }
+  .streak-row { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); margin-bottom: 24px; flex-wrap: wrap; }
+  .streak-pip { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 10px; transition: all 0.3s; flex-direction: column; gap: 1px; cursor: pointer; }
+  .streak-pip .pip-label { font-size: 8px; color: var(--muted); }
+  .streak-pip.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .streak-pip.active .pip-label { color: var(--accent); }
+  .streak-pip.today { border-color: var(--accent); border-width: 2px; }
+  .day-tabs { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; margin-bottom: 24px; }
+  .day-tab { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 3px 7px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+  .day-tab:hover { background: var(--card-hover); border-color: rgba(255,255,255,0.15); }
+  .day-tab.active { border-color: var(--accent); background: var(--accent-dim); }
+  .day-tab.done { border-color: rgba(200,245,66,0.5); }
+  .day-tab.today-tab { box-shadow: 0 0 0 1px var(--accent); }
+  .day-tab-emoji { font-size: 16px; display: block; margin-bottom: 3px; }
+  .day-tab-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; }
+  .day-tab-name { font-size: 8px; color: var(--muted); display: block; margin-top: 1px; line-height: 1.3; }
+  .done-check { display: none; position: absolute; top: 3px; right: 3px; width: 13px; height: 13px; background: var(--accent); border-radius: 50%; color: var(--pitch); font-size: 8px; align-items: center; justify-content: center; font-weight: 700; }
+  .day-tab.done .done-check { display: flex; }
+  .session-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; animation: slideIn 0.25s ease; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .session-header { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .session-title-group h2 { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 1px; color: var(--white); line-height: 1; }
+  .session-title-group p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .session-progress-num { font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: var(--accent); line-height: 1; text-align: right; }
+  .session-progress-label { font-size: 10px; color: var(--muted); text-align: right; }
+  .drill-section-header { padding: 10px 22px 6px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); border-bottom: 1px solid var(--border); }
+  .drill-list { padding: 4px 0; }
+  .drill-item { display: flex; align-items: flex-start; gap: 14px; padding: 13px 22px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; -webkit-tap-highlight-color: transparent; }
+  .drill-item:last-child { border-bottom: none; }
+  .drill-item:hover { background: var(--card-hover); }
+  .drill-item.completed { background: rgba(200,245,66,0.04); }
+  .drill-item.completed .drill-name { text-decoration: line-through; color: var(--muted); }
+  .drill-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); font-size: 12px; color: transparent; }
+  .drill-item.completed .drill-check { background: var(--accent); border-color: var(--accent); color: var(--pitch); box-shadow: 0 0 10px var(--accent-glow); }
+  .drill-item.custom-item .drill-check { border-color: rgba(206,147,216,0.4); }
+  .drill-item.custom-item.completed .drill-check { background: var(--custom); border-color: var(--custom); box-shadow: 0 0 10px rgba(206,147,216,0.4); }
+  .drill-info { flex: 1; min-width: 0; }
+  .drill-name { font-size: 13px; font-weight: 500; color: var(--white); margin-bottom: 2px; transition: color 0.2s; }
+  .drill-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .drill-meta { display: flex; align-items: center; gap: 7px; margin-top: 5px; flex-wrap: wrap; }
+  .drill-time { font-size: 10px; background: var(--muted2); border-radius: 20px; padding: 2px 9px; color: var(--muted); }
+  .drill-tag { font-size: 10px; border-radius: 20px; padding: 2px 9px; }
+  .tag-rodri { background: rgba(79,195,247,0.15); color: var(--rodri); }
+  .tag-rice { background: rgba(129,199,132,0.15); color: var(--rice); }
+  .tag-tchou { background: rgba(255,183,77,0.15); color: var(--tchou); }
+  .tag-warmup { background: rgba(255,138,101,0.15); color: #ff8a65; }
+  .tag-stretch { background: rgba(77,182,172,0.15); color: #4db6ac; }
+  .tag-skills { background: rgba(186,104,200,0.15); color: #ba68c8; }
+  .tag-custom { background: rgba(206,147,216,0.15); color: var(--custom); }
+  .drill-pts { font-size: 11px; font-weight: 700; color: var(--accent); margin-left: auto; white-space: nowrap; padding-top: 1px; flex-shrink: 0; }
+  .drill-item:not(.completed) .drill-pts { opacity: 0.4; }
+  .drill-item.completed .drill-pts { opacity: 1; }
+  .drill-delete { width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(239,83,80,0.3); background: none; color: rgba(239,83,80,0.5); font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; transition: all 0.2s; line-height: 1; }
+  .drill-delete:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,83,80,0.1); }
+  .add-custom-section { padding: 12px 22px 16px; border-top: 1px solid var(--border); }
+  .add-custom-toggle { background: none; border: 1px dashed rgba(206,147,216,0.3); color: rgba(206,147,216,0.7); border-radius: var(--radius-sm); padding: 8px 16px; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; width: 100%; transition: all 0.2s; }
+  .add-custom-toggle:hover { border-color: var(--custom); color: var(--custom); background: rgba(206,147,216,0.05); }
+  .add-custom-form { display: none; margin-top: 10px; }
+  .add-custom-form.open { display: block; }
+  .custom-inputs { display: grid; grid-template-columns: 1fr 100px 80px; gap: 8px; margin-bottom: 8px; }
+  .custom-input { background: var(--muted2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--white); outline: none; transition: border-color 0.2s; }
+  .custom-input::placeholder { color: var(--muted); }
+  .custom-input:focus { border-color: var(--custom); }
+  .custom-desc-input { width: 100%; margin-bottom: 8px; }
+  .custom-submit { background: rgba(206,147,216,0.15); border: 1px solid rgba(206,147,216,0.3); color: var(--custom); border-radius: var(--radius-sm); padding: 8px 16px; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.2s; width: 100%; }
+  .custom-submit:hover { background: rgba(206,147,216,0.25); }
+  .challenge-banner { margin: 0 16px 16px; padding: 14px 18px; background: rgba(255,183,77,0.08); border: 1px solid rgba(255,183,77,0.2); border-radius: var(--radius); display: flex; gap: 12px; align-items: flex-start; }
+  .challenge-icon { font-size: 20px; flex-shrink: 0; }
+  .challenge-text strong { display: block; font-size: 12px; font-weight: 500; color: var(--tchou); margin-bottom: 2px; }
+  .challenge-text p { font-size: 11px; color: var(--muted); line-height: 1.5; margin: 0; }
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--accent); color: var(--pitch); font-weight: 600; font-size: 13px; padding: 10px 22px; border-radius: 30px; box-shadow: 0 4px 24px var(--accent-glow); transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 1000; pointer-events: none; white-space: nowrap; }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  .particle { position: fixed; pointer-events: none; z-index: 999; font-size: 18px; animation: floatUp 1.2s ease-out forwards; }
+  @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-80px) scale(0.5); } }
+  .bottom-row { display: flex; gap: 10px; margin-top: 28px; flex-wrap: wrap; }
+  .reset-btn { background: none; border: 1px solid rgba(239,83,80,0.3); color: rgba(239,83,80,0.6); padding: 7px 14px; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 11px; cursor: pointer; transition: all 0.2s; }
+  .reset-btn:hover { border-color: var(--danger); color: var(--danger); }
+  #levelup-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 2000; align-items: center; justify-content: center; }
+  #levelup-modal.show { display: flex; }
+  .levelup-box { background: #1e3a1e; border: 1px solid var(--accent); border-radius: var(--radius); padding: 40px; text-align: center; max-width: 300px; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes popIn { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
+  .levelup-emoji { font-size: 52px; display: block; margin-bottom: 12px; }
+  .levelup-box h2 { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--accent); letter-spacing: 2px; margin-bottom: 6px; }
+  .levelup-box p { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .levelup-close { background: var(--accent); color: var(--pitch); border: none; border-radius: var(--radius-sm); padding: 10px 28px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .loading-screen { position: fixed; inset: 0; background: var(--pitch); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 3000; gap: 16px; }
+  .loading-screen h2 { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--accent); letter-spacing: 2px; }
+  .loading-screen p { font-size: 13px; color: var(--muted); }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--muted2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (max-width: 600px) { .stats-bar { grid-template-columns: repeat(2, 1fr); } .day-tab-name { display: none; } .custom-inputs { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loading-screen">
+  <h2>Midfield Blueprint</h2>
+  <div class="spinner"></div>
+  <p id="loading-text">Syncing your progress...</p>
+</div>
+
+<div class="app">
+  <header>
+    <div class="logo-area">
+      <h1>The Midfield Blueprint</h1>
+      <p>Inspired by Rodri · Declan Rice · Tchouaméni</p>
+    </div>
+    <div class="date-display">
+      <div class="date-big" id="date-big"></div>
+      <div class="date-small" id="date-small"></div>
+      <div class="week-reset-note" id="week-note"></div>
+      <div class="sync-indicator synced" id="sync-indicator">● Synced</div>
+    </div>
+  </header>
+  <div class="level-badge"><span id="level-text">⚽ Youth Player</span></div>
+  <div class="xp-section">
+    <div class="xp-header"><span id="xp-label">0 XP</span><span id="xp-next">Next: 150 XP</span></div>
+    <div class="xp-track"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+  </div>
+  <div class="stats-bar">
+    <div class="stat-card" id="sc-pts"><div class="stat-label">Total Points</div><div class="stat-value" id="stat-pts">0</div><div class="stat-sub">All time</div></div>
+    <div class="stat-card" id="sc-tasks"><div class="stat-label">This Week</div><div class="stat-value" id="stat-tasks">0</div><div class="stat-sub">Tasks done</div></div>
+    <div class="stat-card" id="sc-streak"><div class="stat-label">Week Streak</div><div class="stat-value" id="stat-streak">0</div><div class="stat-sub">Weeks in a row</div></div>
+    <div class="stat-card" id="sc-days"><div class="stat-label">Days Done</div><div class="stat-value" id="stat-days">0</div><div class="stat-sub">This week</div></div>
+  </div>
+  <div class="streak-row" id="streak-row"></div>
+  <div class="day-tabs" id="day-tabs"></div>
+  <div class="session-card" id="session-card"></div>
+  <div class="bottom-row">
+    <button class="reset-btn" onclick="confirmReset()">Reset all progress</button>
+    <button class="reset-btn" style="border-color:rgba(200,245,66,0.2);color:rgba(200,245,66,0.4)" onclick="confirmWeekReset()">Reset this week</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="levelup-modal">
+  <div class="levelup-box">
+    <span class="levelup-emoji" id="levelup-emoji">🏆</span>
+    <h2>LEVEL UP!</h2>
+    <p id="levelup-text">You reached a new level!</p>
+    <button class="levelup-close" onclick="closeLevelUp()">Let's go! 💪</button>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://fdwbhcntzvgofpkxrlpb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkd2JoY250enZnb2Zwa3hybHBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MTk3MzYsImV4cCI6MjA4OTE5NTczNn0.-gEp-NDpZ2jeGu349L7aSIuUG0MhKP9QnM5aW0N42-4';
+
+async function dbGet() {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/progress?id=eq.main&select=data`, {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+  });
+  const rows = await r.json();
+  return rows && rows[0] ? rows[0].data : null;
+}
+
+async function dbSet(data) {
+  setSyncStatus('syncing');
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/progress?id=eq.main`, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ data, updated_at: new Date().toISOString() })
+    });
+    setSyncStatus('synced');
+  } catch(e) {
+    setSyncStatus('error');
+    localStorage.setItem('mfbp_offline', JSON.stringify(data));
+  }
+}
+
+function setSyncStatus(s) {
+  const el = document.getElementById('sync-indicator');
+  el.className = `sync-indicator ${s}`;
+  el.textContent = s === 'syncing' ? '↑ Syncing...' : s === 'synced' ? '● Synced' : '⚠ Offline';
+}
+
+const DAYS=[{label:"MON",emoji:"🎯",type:"Technical",name:"Skills Day",challenge:{icon:"🇪🇸",title:"Rodri Challenge",text:"Complete 5 passes in a row in your next match without losing the ball. Head up before every touch."},drills:[{name:"Dynamic warmup jog",time:"5 min",tag:"warmup",tagLabel:"Warmup",desc:"Easy jog around the garden or room. High knees for 20 steps, butt kicks for 20 steps, then side shuffles. Gets the blood flowing before touching a ball.",pts:5},{name:"Leg swings + hip circles",time:"3 min",tag:"warmup",tagLabel:"Warmup",desc:"Hold a wall, swing each leg forward/back 10 times, then side to side 10 times. Then roll your hips in big circles. Opens up the joints before any footwork.",pts:5},{name:"Wall passing — both feet",time:"10 min",tag:"rodri",tagLabel:"Rodri",desc:"Pass against a wall, alternating feet. Keep your head up between touches. Rice did this every evening after academy training.",pts:15},{name:"1-2-3 touch passing",time:"10 min",tag:"rodri",tagLabel:"Rodri",desc:"1 touch pass, then 2 touch, then 3 touch. Repeat the cycle. Builds the composure under pressure Rodri is known for.",pts:15},{name:"Dribble cone course",time:"10 min",tag:"tchou",tagLabel:"Tchouaméni",desc:"6 cones in a line. Dribble slow with full control, then sprint through at pace. Ball-carrying starts with clean close control.",pts:15},{name:"Weak foot shots",time:"5 min",tag:"rice",tagLabel:"Rice",desc:"10 shots with your weaker foot at a target. Try to score 7 out of 10. Rice spent months fixing his weaker foot this exact way.",pts:10},{name:"Skill move — Inside chop",time:"5 min",tag:"skills",tagLabel:"Skill Move",desc:"Dribble slowly, then chop the ball sharply with the inside of your foot to change direction. Do 10 reps each direction. This is a DM's escape move when pressed.",pts:10},{name:"Skill move — Body feint",time:"5 min",tag:"skills",tagLabel:"Skill Move",desc:"Walk slowly, drop your shoulder hard one way, then push the ball the other way. Rodri uses this constantly to create space in tight midfield areas. 10 reps each side.",pts:10},{name:"Juggling challenge",time:"5 min",tag:"skills",tagLabel:"Juggling",desc:"Juggle as many times as you can without the ball hitting the floor. Write down your record. Beat it tomorrow. Try thighs only, then feet only, then mix it up.",pts:10},{name:"Instinct — First touch walls",time:"5 min",tag:"skills",tagLabel:"Instinct",desc:"Throw the ball against a wall at different heights and angles. Control it instantly without thinking. The goal: zero planning, pure reaction. This separates academy players.",pts:10},{name:"Hip flexor + quad stretch",time:"4 min",tag:"stretch",tagLabel:"Cool Down",desc:"Kneel on one knee, push hips forward and hold 30 seconds each side. Then standing quad stretch 30 seconds each leg. Essential after dribbling and shooting sessions.",pts:5},{name:"Hamstring + calf stretch",time:"3 min",tag:"stretch",tagLabel:"Cool Down",desc:"Sit with legs straight, reach toward toes and hold 30 seconds. Then stand and press heel into floor with bent knee for calves. 30 sec each side.",pts:5}]},{label:"TUE",emoji:"💪",type:"Strength",name:"Bodyweight Circuit",challenge:{icon:"🇫🇷",title:"Tchouaméni Challenge",text:"Hold a plank as long as you can. Record your time. Beat it next Tuesday."},drills:[{name:"Jumping jacks",time:"3 min",tag:"warmup",tagLabel:"Warmup",desc:"Non-stop jumping jacks for 3 minutes. Simple but gets your heart rate up and warms every muscle group before the strength circuit.",pts:5},{name:"Arm circles + shoulder rolls",time:"2 min",tag:"warmup",tagLabel:"Warmup",desc:"Big arm circles forward 10 times, backward 10 times. Then roll shoulders back 10 times. Warms upper body before push-ups.",pts:5},{name:"Push-ups",time:"3 × 12 reps",tag:"tchou",tagLabel:"Tchouaméni",desc:"2 seconds down, 1 second up. Slow and controlled. Builds shoulder strength for aerial duels and shielding the ball.",pts:10},{name:"Bodyweight squats",time:"3 × 15 reps",tag:"tchou",tagLabel:"Tchouaméni",desc:"Feet shoulder-width, back straight, knees tracking over toes. Foundation of lower body power that drives through tackles.",pts:10},{name:"Walking lunges",time:"3 × 10 each leg",tag:"tchou",tagLabel:"Tchouaméni",desc:"Across the room or garden. Fires your glutes and hamstrings — essential for sprinting and direction changes.",pts:10},{name:"Plank hold",time:"3 × 30-45 sec",tag:"tchou",tagLabel:"Tchouaméni",desc:"Core strength = balance on the ball. Write your best time down every week and try to beat it.",pts:10},{name:"Nordic curls",time:"2 × 6 reps",tag:"tchou",tagLabel:"Tchouaméni",desc:"Anchor your feet under a sofa, lower yourself slowly. Best hamstring exercise for footballers. These are brutal — take your time.",pts:15},{name:"Instinct — Reaction ball drops",time:"5 min",tag:"skills",tagLabel:"Instinct",desc:"Drop a ball from chest height and catch it after one bounce as fast as possible. Trains reaction speed — critical for intercepting passes.",pts:10},{name:"Juggling — Headers only",time:"3 min",tag:"skills",tagLabel:"Juggling",desc:"Throw the ball up and head it back to yourself repeatedly. Trains neck strength and aerial control.",pts:8},{name:"Full body stretch",time:"5 min",tag:"stretch",tagLabel:"Cool Down",desc:"Lie on your back: pull one knee to chest, hold 30 sec each side. Then seated forward fold 30 sec. Then child's pose 30 sec.",pts:5}]},{label:"WED",emoji:"🧠",type:"Brain",name:"Game Intelligence",challenge:{icon:"🇪🇸",title:"Rodri Brain Challenge",text:"Watch 10 minutes of a match with sound off. Only watch the defensive midfielder. Where do they go when their team has the ball?"},drills:[{name:"Light jog + skipping",time:"5 min",tag:"warmup",tagLabel:"Warmup",desc:"Easy 5 minute jog or skip rope if you have one. Wednesday is a brain day so keep the warmup gentle.",pts:5},{name:"Ankle mobility circles",time:"2 min",tag:"warmup",tagLabel:"Warmup",desc:"Rotate each ankle 10 times clockwise and 10 times anticlockwise. Footballers neglect ankles constantly — don't be one of them.",pts:5},{name:"Match study — mute the TV",time:"15 min",tag:"rodri",tagLabel:"Rodri",desc:"Pick any match. Mute it. Watch only the DM. Where do they position with the ball? Without it? Rodri said he learned more from watching than training.",pts:20},{name:"The pause game",time:"10 min",tag:"rodri",tagLabel:"Rodri",desc:"Watch a highlight on YouTube. Pause before every pass and guess what happens next. This builds the anticipation that makes Rodri look psychic on the pitch.",pts:15},{name:"Small-sided game (3v3 or 4v4)",time:"20 min",tag:"rice",tagLabel:"Rice",desc:"Get friends together and play in a small space. One rule: look over your shoulder before every single touch. Count how many times. Beat your record each week.",pts:25},{name:"Instinct — Blindfolded ball touch",time:"5 min",tag:"skills",tagLabel:"Instinct",desc:"Close your eyes. Roll the ball away, find it with your feet and bring it back under control — all without looking. Forces your feet to feel the ball, not just see it.",pts:10},{name:"Juggling — Weak foot only",time:"5 min",tag:"skills",tagLabel:"Juggling",desc:"Juggle using ONLY your weaker foot. Start with one touch and catch if needed. Build up. Rice spent an entire year making his left foot equal to his right.",pts:10},{name:"Skill move — Roulette (Zidane turn)",time:"5 min",tag:"skills",tagLabel:"Skill Move",desc:"Slow jog, stop ball with sole, drag it back, spin 180 degrees and push forward. 10 slow reps. This is how DMs escape a press.",pts:10},{name:"Training journal",time:"5 min",tag:"tchou",tagLabel:"Tchouaméni",desc:"Write: 1 thing done well this week, 1 thing to improve, 1 goal for next week. Tchouaméni hired a mental trainer — this is your free version.",pts:10},{name:"Seated hamstring + back stretch",time:"4 min",tag:"stretch",tagLabel:"Cool Down",desc:"Legs straight out, reach toward toes and hold 30 seconds. Then hug both knees to your chest and rock side to side gently.",pts:5}]},{label:"THU",emoji:"⚡",type:"Speed",name:"Speed & Agility",challenge:{icon:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",title:"Rice Speed Challenge",text:"Time yourself over 5 metres from a standing start. Write it down. Beat it next Thursday."},drills:[{name:"High knees sprint warmup",time:"4 min",tag:"warmup",tagLabel:"Warmup",desc:"30 seconds of high knees jogging, then 30 seconds normal jog. Repeat 4 times. Specifically warms the hip flexors needed for sprint starts.",pts:5},{name:"Lateral shuffle warmup",time:"3 min",tag:"warmup",tagLabel:"Warmup",desc:"Shuffle sideways 5 metres left, 5 metres right, repeat for 3 minutes. Warms the groin and inner thigh.",pts:5},{name:"5m sprint starts",time:"3 × 10 reps",tag:"rice",tagLabel:"Rice",desc:"Standing still, then explode for exactly 5 metres. Rest 30 seconds between reps. First-step quickness is more important than top speed for a DM.",pts:15},{name:"Cone zigzag",time:"10 min",tag:"rice",tagLabel:"Rice",desc:"6 cones in a zigzag. Sprint through as fast as possible. Improves direction change — the key to pressing and recovering defensively.",pts:15},{name:"Defender shadowing",time:"10 min",tag:"rice",tagLabel:"Rice",desc:"Partner dribbles slowly, you mirror them side-to-side staying arms-length away. Builds the defensive footwork Rice is famous for.",pts:15},{name:"Instinct — Quick feet cone taps",time:"5 min",tag:"skills",tagLabel:"Instinct",desc:"Tap the top of a ball alternately with each foot as fast as possible for 30 seconds, rest 30 seconds. Repeat 5 times. Trains your feet to move without thinking.",pts:10},{name:"Juggling — Chest and thigh combos",time:"5 min",tag:"skills",tagLabel:"Juggling",desc:"Throw ball up, control with chest, let it drop to thigh, then foot. Keep it going. Trains full body touch control.",pts:10},{name:"Skill move — Step over",time:"5 min",tag:"skills",tagLabel:"Skill Move",desc:"Dribble slowly, step your foot over the ball without touching it, then push the opposite direction. 10 reps each side.",pts:10},{name:"Cool-down jog",time:"5 min",tag:"stretch",tagLabel:"Cool Down",desc:"Easy jog, let your heart rate come all the way down. Never stop suddenly after sprinting.",pts:5},{name:"Full leg stretch",time:"5 min",tag:"stretch",tagLabel:"Cool Down",desc:"Standing quad stretch 30 sec each leg. Seated hamstring reach 30 sec. Butterfly stretch for hips 30 sec each. Never skip this after speed work.",pts:5}]},{label:"FRI",emoji:"⚽",type:"Prep",name:"Match Preparation",challenge:{icon:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",title:"Visualisation Challenge",text:"Before bed, close your eyes for 3 minutes and picture yourself winning a tackle, playing a perfect pass, and scoring."},drills:[{name:"Neck and shoulder warmup",time:"3 min",tag:"warmup",tagLabel:"Warmup",desc:"Tilt your head left/right/forward/back slowly. Then roll shoulders forward and backward 10 times each. Match day tomorrow — feel loose, not stiff.",pts:5},{name:"Dynamic leg swings",time:"3 min",tag:"warmup",tagLabel:"Warmup",desc:"Hold a wall. Swing each leg forward and backward 15 times. Then across your body 15 times.",pts:5},{name:"Light passing warm-up",time:"10 min",tag:"rodri",tagLabel:"Rodri",desc:"Easy and fun. Just keep the ball moving with a friend or against a wall. Save the energy for tomorrow — nothing intense today.",pts:10},{name:"Set piece movement practice",time:"10 min",tag:"rice",tagLabel:"Rice",desc:"Practice 5 free-kick runs and 5 corner-kick movement patterns. Know exactly where to be before the ball arrives.",pts:15},{name:"Skill move — Your best one, slow",time:"5 min",tag:"skills",tagLabel:"Skill Move",desc:"Pick the skill move you feel most confident with. Do it perfectly and slowly 20 times. Not fast — perfect.",pts:10},{name:"Juggling — Personal record attempt",time:"5 min",tag:"skills",tagLabel:"Juggling",desc:"Try to beat your juggling personal record. One proper attempt, fully focused. Write the number down.",pts:10},{name:"Instinct — Eyes up passing",time:"5 min",tag:"skills",tagLabel:"Instinct",desc:"While passing against a wall, call out something you can see in the room every time you touch the ball. Forces eyes up and makes your pass automatic.",pts:10},{name:"Visualisation session",time:"5 min",tag:"tchou",tagLabel:"Tchouaméni",desc:"Sit quietly. Close your eyes. Walk through tomorrow's match in your head — winning tackles, perfect passes, a goal.",pts:15},{name:"Early night + good sleep",time:"9+ hours",tag:"rodri",tagLabel:"Rodri",desc:"All three pros are strict about sleep the night before matches. 9+ hours. Your muscles recover and your brain consolidates everything you drilled this week.",pts:20},{name:"Light full-body stretch before bed",time:"5 min",tag:"stretch",tagLabel:"Cool Down",desc:"Child's pose 30 sec. Butterfly stretch 30 sec. Lying spinal twist each side 30 sec. Calms your nervous system and helps you sleep deeply.",pts:5}]},{label:"SAT",emoji:"🏆",type:"Game",name:"Game Day / Free Play",challenge:{icon:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",title:"Rice Street Football Challenge",text:"Pick ONE thing to focus on during your whole game today. Just one. Judge yourself only on that one thing."},drills:[{name:"Match warmup jog + strides",time:"8 min",tag:"warmup",tagLabel:"Warmup",desc:"5 min easy jog, then 3 x 20m strides at 80% pace. Gets your legs firing without draining energy before kick off.",pts:5},{name:"Dynamic stretch circuit",time:"5 min",tag:"warmup",tagLabel:"Warmup",desc:"Leg swings, hip circles, high knees, butt kicks, side shuffles. No static holding — everything is moving. Official academy pre-match warmup.",pts:5},{name:"Match or kickabout — PLAY!",time:"60-90 min",tag:"rice",tagLabel:"Rice",desc:"Play! If you have a match, give everything. If not, get friends and enjoy the game freely. This is the most important session of the week.",pts:30},{name:"Single focus point",time:"During game",tag:"rodri",tagLabel:"Rodri",desc:"Pick ONE thing to focus on the whole game: head up before receiving, position before the ball arrives, or always looking for the pass before touching.",pts:20},{name:"Use a skill move in the game",time:"During game",tag:"skills",tagLabel:"Skill Move",desc:"Try to use one of the skill moves you practiced this week in a real game situation. Even if it doesn't work — you tried it. That's how they become automatic.",pts:15},{name:"Post-match 3-question review",time:"5 min",tag:"tchou",tagLabel:"Tchouaméni",desc:"What was my best moment? What did I struggle with? What's my one focus for next week? Write it down.",pts:10},{name:"Post-match full stretch",time:"8 min",tag:"stretch",tagLabel:"Cool Down",desc:"Quad, hamstring, hip flexor, calf — 40 seconds each side. Most important stretch of the week — muscles are warm right now. Do NOT skip this.",pts:8}]},{label:"SUN",emoji:"😴",type:"Rest",name:"Rest & Recovery",isRest:true,challenge:null,drills:[{name:"Light walk (optional)",time:"20 min",tag:"stretch",tagLabel:"Active Rest",desc:"An optional gentle walk to flush out lactic acid from the week. Pros call this active recovery.",pts:5},{name:"Full body mobility stretch",time:"10 min",tag:"stretch",tagLabel:"Cool Down",desc:"Child's pose, pigeon pose, seated spinal twist, butterfly stretch. 45 seconds each. Sunday is the day to fully undo the week's tension.",pts:8},{name:"Mental reset — No football content",time:"All day",tag:"skills",tagLabel:"Mindset",desc:"No YouTube highlights, no FIFA, nothing football. Give your brain a full day off. Come back Monday hungry.",pts:5}]}];
+const LEVELS=[{name:"Youth Player",emoji:"⚽",min:0},{name:"Academy Prospect",emoji:"🌟",min:150},{name:"Reserve Player",emoji:"🥈",min:350},{name:"First Team Contender",emoji:"🥇",min:650},{name:"Professional",emoji:"🏆",min:1000},{name:"International Star",emoji:"👑",min:1500},{name:"Ballon d'Or Candidate",emoji:"🎖️",min:2200}];
+const DAY_NAMES=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+function getWeekKey(){const n=new Date(),d=n.getDay(),m=new Date(n);m.setDate(n.getDate()-(d===0?6:d-1));return`${m.getFullYear()}-${m.getMonth()}-${m.getDate()}`;}
+function getTodayIdx(){const d=new Date().getDay();return d===0?6:d-1;}
+function formatDate(){const d=new Date(),days=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];return{big:`${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`,small:`Week of ${getWeekKey()}`};}
+const DEFAULT_STATE={totalPoints:0,weekPoints:0,weekTasks:0,weekStreak:0,completedDrills:{},daysDone:{},customDrills:{},currentWeek:getWeekKey()};
+let state=JSON.parse(JSON.stringify(DEFAULT_STATE));
+let activeDay=getTodayIdx(),prevLevel=0,saveTimer=null;
+
+function checkWeekRollover(){if(state.currentWeek!==getWeekKey()){const prev=Object.keys(state.daysDone||{}).filter(k=>k.startsWith(state.currentWeek)).length;if(prev>=5)state.weekStreak=(state.weekStreak||0)+1;else if(prev>0)state.weekStreak=0;state.currentWeek=getWeekKey();state.weekPoints=0;state.weekTasks=0;setTimeout(()=>showToast('🗓️ New week! Keep the streak going!'),600);}}
+
+async function init(){
+  document.getElementById('loading-text').textContent='Syncing your progress...';
+  try {
+    const remote=await dbGet();
+    if(remote){state={...DEFAULT_STATE,...remote};checkWeekRollover();}
+    else{state={...DEFAULT_STATE};await dbSet(state);}
+  } catch(e){
+    const local=localStorage.getItem('mfbp_offline');
+    if(local){state={...DEFAULT_STATE,...JSON.parse(local)};checkWeekRollover();}
+    setSyncStatus('error');
+  }
+  prevLevel=getLevel().index;
+  document.getElementById('loading-screen').style.display='none';
+  renderAll();
+}
+
+function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>dbSet(state),800);}
+function save(){localStorage.setItem('mfbp_offline',JSON.stringify(state));scheduleSave();}
+function getLevel(){for(let i=LEVELS.length-1;i>=0;i--)if(state.totalPoints>=LEVELS[i].min)return{...LEVELS[i],index:i};return{...LEVELS[0],index:0};}
+function getNextLevel(){const c=getLevel();return LEVELS[c.index+1]||null;}
+function getLevelProgress(){const c=getLevel(),n=getNextLevel();if(!n)return 100;return Math.min(100,((state.totalPoints-c.min)/(n.min-c.min))*100);}
+function renderDate(){const{big,small}=formatDate();document.getElementById('date-big').textContent=big;document.getElementById('date-small').textContent=small;const t=getTodayIdx(),dl=6-t;document.getElementById('week-note').textContent=dl===0?'Last day of the week!':`${dl} day${dl>1?'s':''} left this week`;}
+function renderStats(){document.getElementById('stat-pts').textContent=state.totalPoints;document.getElementById('stat-tasks').textContent=state.weekTasks;document.getElementById('stat-streak').textContent=state.weekStreak;const dd=Object.keys(state.daysDone).filter(k=>k.startsWith(state.currentWeek)).length;document.getElementById('stat-days').textContent=dd;const lv=getLevel();document.getElementById('level-text').textContent=`${lv.emoji} ${lv.name}`;document.getElementById('xp-label').textContent=`${state.totalPoints} XP`;const nx=getNextLevel();document.getElementById('xp-next').textContent=nx?`Next: ${nx.min} XP`:'MAX LEVEL!';document.getElementById('xp-fill').style.width=getLevelProgress()+'%';}
+function renderStreakRow(){const ti=getTodayIdx(),wk=state.currentWeek;document.getElementById('streak-row').innerHTML=`<span>This week:</span>`+DAY_NAMES.map((n,i)=>{const done=!!state.daysDone[`${wk}_${i}`],isToday=i===ti;return`<div class="streak-pip ${done?'active':''} ${isToday?'today':''}" onclick="setDay(${i})">${done?'✓':''}<span class="pip-label">${n}</span></div>`;}).join('');}
+function renderDayTabs(){const ti=getTodayIdx(),wk=state.currentWeek;document.getElementById('day-tabs').innerHTML=DAYS.map((d,i)=>{const done=!!state.daysDone[`${wk}_${i}`],isToday=i===ti;return`<div class="day-tab ${i===activeDay?'active':''} ${done?'done':''} ${isToday?'today-tab':''}" onclick="setDay(${i})"><span class="day-tab-emoji">${d.emoji}</span><span class="day-tab-label">${d.label}</span><span class="day-tab-name">${d.type}</span><div class="done-check">✓</div></div>`;}).join('');}
+function getDrillKey(di,dri,ic){return`${state.currentWeek}_${di}_${ic?'c':''}${dri}`;}
+function renderSession(){const d=DAYS[activeDay],c=document.getElementById('session-card'),cd=state.completedDrills,customs=state.customDrills[activeDay]||[];const allD=d.drills.length+customs.length,doneD=d.drills.filter((_,i)=>cd[getDrillKey(activeDay,i,false)]).length+customs.filter((_,i)=>cd[getDrillKey(activeDay,i,true)]).length;
+const groups=[{label:"🔥 Warmup",f:dr=>dr.tag==='warmup'},{label:"⚽ Technical Drills",f:dr=>['rodri','rice','tchou'].includes(dr.tag)},{label:"🎪 Skill Moves · Juggling · Instinct",f:dr=>dr.tag==='skills'},{label:"🧘 Cool Down & Stretches",f:dr=>dr.tag==='stretch'}];
+let drillsHtml='';
+groups.forEach(g=>{const gd=d.drills.filter(g.f);if(!gd.length)return;drillsHtml+=`<div class="drill-section-header">${g.label}</div>`;gd.forEach(drill=>{const idx=d.drills.indexOf(drill),key=getDrillKey(activeDay,idx,false),isDone=!!cd[key];drillsHtml+=drillHTML(drill,idx,isDone,false);});});
+if(customs.length){drillsHtml+=`<div class="drill-section-header">✏️ My Custom Tasks</div>`;customs.forEach((drill,i)=>{const key=getDrillKey(activeDay,i,true),isDone=!!cd[key];drillsHtml+=drillHTML(drill,i,isDone,true);});}
+const ch=d.challenge?`<div class="challenge-banner"><div class="challenge-icon">${d.challenge.icon}</div><div class="challenge-text"><strong>${d.challenge.title}</strong><p>${d.challenge.text}</p></div></div>`:'';
+c.innerHTML=`<div class="session-header"><div class="session-title-group"><h2>${d.emoji} ${d.name}</h2><p>${d.type} session · ${allD} tasks</p></div><div><div class="session-progress-num">${doneD}/${allD}</div><div class="session-progress-label">completed</div></div></div><div class="drill-list">${drillsHtml}</div>${ch}<div class="add-custom-section"><button class="add-custom-toggle" onclick="toggleCustomForm()">+ Add my own task</button><div class="add-custom-form" id="custom-form"><div class="custom-inputs"><input class="custom-input" id="c-name" placeholder="Task name"/><input class="custom-input" id="c-time" placeholder="Time e.g. 10 min"/><input class="custom-input" id="c-pts" placeholder="Points" type="number" min="1" max="50" value="10"/></div><input class="custom-input custom-desc-input" id="c-desc" placeholder="Description (optional)"/><button class="custom-submit" onclick="addCustomDrill()">Add task ✓</button></div></div>`;}
+function drillHTML(drill,idx,isDone,isCustom){const del=isCustom?`<button class="drill-delete" onclick="event.stopPropagation();deleteCustomDrill(${idx})" title="Remove">×</button>`:'';return`<div class="drill-item ${isDone?'completed':''} ${isCustom?'custom-item':''}" onclick="toggleDrill(${activeDay},${idx},${isCustom})"><div class="drill-check">${isDone?'✓':''}</div><div class="drill-info"><div class="drill-name">${drill.name}</div><div class="drill-desc">${drill.desc}</div><div class="drill-meta"><span class="drill-time">⏱ ${drill.time}</span><span class="drill-tag tag-${isCustom?'custom':drill.tag}">${isCustom?'Custom':drill.tagLabel}</span></div></div><div class="drill-pts">+${drill.pts} pts</div>${del}</div>`;}
+function toggleDrill(di,dri,ic){const key=getDrillKey(di,dri,ic),drills=ic?(state.customDrills[di]||[]):DAYS[di].drills,drill=drills[dri];if(!drill)return;const was=!!state.completedDrills[key];if(!was){state.completedDrills[key]=true;state.totalPoints+=drill.pts;state.weekPoints=(state.weekPoints||0)+drill.pts;state.weekTasks++;animateStat('stat-pts');animateStat('stat-tasks');showToast(`+${drill.pts} pts — Nice work! 💪`);spawnParticle();checkLevelUp();checkDayComplete(di);}else{state.completedDrills[key]=false;state.totalPoints=Math.max(0,state.totalPoints-drill.pts);state.weekPoints=Math.max(0,(state.weekPoints||0)-drill.pts);state.weekTasks=Math.max(0,state.weekTasks-1);}save();renderAll();}
+function checkDayComplete(di){const d=DAYS[di],customs=state.customDrills[di]||[];const allDone=d.drills.every((_,i)=>state.completedDrills[getDrillKey(di,i,false)])&&customs.every((_,i)=>state.completedDrills[getDrillKey(di,i,true)]);const key=`${state.currentWeek}_${di}`;if(allDone&&!state.daysDone[key]){state.daysDone[key]=true;setTimeout(()=>showToast('🏆 Day complete! Great session!'),800);setTimeout(()=>spawnParticle('🏆'),900);}}
+function checkLevelUp(){const nl=getLevel().index;if(nl>prevLevel){prevLevel=nl;const lv=getLevel();document.getElementById('levelup-emoji').textContent=lv.emoji;document.getElementById('levelup-text').textContent=`You're now a ${lv.name}!`;document.getElementById('levelup-modal').classList.add('show');}}
+function closeLevelUp(){document.getElementById('levelup-modal').classList.remove('show');}
+function toggleCustomForm(){document.getElementById('custom-form').classList.toggle('open');}
+function addCustomDrill(){const name=document.getElementById('c-name').value.trim(),time=document.getElementById('c-time').value.trim()||'–',pts=Math.min(50,Math.max(1,parseInt(document.getElementById('c-pts').value)||10)),desc=document.getElementById('c-desc').value.trim()||'Custom task.';if(!name){showToast('Give your task a name first!');return;}if(!state.customDrills[activeDay])state.customDrills[activeDay]=[];state.customDrills[activeDay].push({name,time,pts,desc,tag:'custom',tagLabel:'Custom'});document.getElementById('c-name').value='';document.getElementById('c-time').value='';document.getElementById('c-desc').value='';document.getElementById('c-pts').value='10';document.getElementById('custom-form').classList.remove('open');save();renderAll();showToast('Task added! ✓');}
+function deleteCustomDrill(idx){if(!confirm('Remove this custom task?'))return;delete state.completedDrills[getDrillKey(activeDay,idx,true)];state.customDrills[activeDay].splice(idx,1);save();renderAll();}
+function setDay(i){activeDay=i;renderDayTabs();renderSession();}
+let toastTimer;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2400);}
+function animateStat(id){const el=document.getElementById(id);if(!el)return;el.classList.add('bump');el.parentElement.classList.add('lit');setTimeout(()=>{el.classList.remove('bump');el.parentElement.classList.remove('lit');},300);}
+function spawnParticle(emoji='⭐'){const pool=['⭐','✨','🔥','💥','⚡'],e=emoji==='⭐'?pool[Math.floor(Math.random()*pool.length)]:emoji,p=document.createElement('div');p.className='particle';p.textContent=e;p.style.left=(25+Math.random()*50)+'%';p.style.bottom='80px';document.body.appendChild(p);setTimeout(()=>p.remove(),1300);}
+function confirmReset(){if(confirm('Reset ALL progress including total points? Cannot be undone.')){state={...DEFAULT_STATE,currentWeek:getWeekKey()};prevLevel=0;activeDay=getTodayIdx();save();renderAll();showToast('Full reset. Fresh start! 💪');}}
+function confirmWeekReset(){if(confirm("Reset just this week's progress? Your total points stay.")){const wk=state.currentWeek;Object.keys(state.completedDrills).forEach(k=>{if(k.startsWith(wk))delete state.completedDrills[k];});Object.keys(state.daysDone).forEach(k=>{if(k.startsWith(wk))delete state.daysDone[k];});state.weekPoints=0;state.weekTasks=0;save();renderAll();showToast('This week reset. Go again! 💪');}}
+function renderAll(){renderDate();renderStats();renderStreakRow();renderDayTabs();renderSession();}
+const now=new Date(),msToMidnight=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1)-now;
+setTimeout(()=>{checkWeekRollover();renderAll();},msToMidnight);
+init();
+</script>
+</body>
+</html>
